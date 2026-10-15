@@ -1,0 +1,34 @@
+import { Link } from "react-router-dom";
+
+export const statusLabels = {
+  LOST: "Desaparecido",
+  FOUND: "Encontrado",
+  REUNITED: "De volta em casa",
+};
+
+export const typeLabels = { DOG: "Cachorro", CAT: "Gato", OTHER: "Outro animal" };
+
+export function PetCard({ pet }) {
+  return (
+    <article className="pet-card">
+      <div className={`pet-card-illustration type-${pet.type.toLowerCase()}`} aria-hidden="true">
+        <span>{pet.type === "DOG" ? "🐕" : pet.type === "CAT" ? "🐈" : "🐾"}</span>
+        <span className="card-glow" />
+      </div>
+      <div className="pet-card-body">
+        <span className={`status-pill status-${pet.status.toLowerCase()}`}>
+          <span className="status-dot" />{statusLabels[pet.status]}
+        </span>
+        <div className="card-title-row">
+          <h3>{pet.name}</h3>
+          <span className="pet-type">{typeLabels[pet.type]}</span>
+        </div>
+        <p className="pet-place">📍 {pet.neighborhood}, {pet.city}</p>
+        <p className="pet-excerpt">{pet.description}</p>
+        <Link className="card-link" to={`/pets/${pet.id}`}>
+          Ver detalhes <span aria-hidden="true">→</span>
+        </Link>
+      </div>
+    </article>
+  );
+}
