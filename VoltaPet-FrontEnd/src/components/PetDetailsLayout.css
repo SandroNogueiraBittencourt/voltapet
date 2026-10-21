@@ -1,0 +1,182 @@
+/* VoltaPet — layout exclusivo da tela de detalhes da ocorrência.
+   Não modifica a página inicial, cards ou modal de publicação. */
+.pet-details-page {
+  padding-top: 36px;
+  padding-bottom: 80px;
+}
+
+.pet-details-page .back-button {
+  display: inline-flex;
+  align-items: center;
+  margin: 0 0 24px;
+  padding: 6px 0;
+  line-height: 1.5;
+}
+
+.pet-details-overview {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: clamp(20px, 3.4vw, 44px);
+  align-items: stretch;
+}
+
+.pet-details-overview > * {
+  min-width: 0;
+}
+
+.pet-details-overview .details-art {
+  min-height: 0;
+  min-width: 0;
+  height: 100%;
+  max-height: 570px;
+  aspect-ratio: 1.18 / 1;
+  border-radius: 24px;
+  overflow: hidden;
+  font-size: clamp(120px, 12vw, 210px);
+}
+
+.pet-details-summary {
+  min-width: 0;
+  padding: clamp(22px, 3vw, 36px);
+  border: 1px solid #e8efeb;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgba(23, 62, 55, 0.04);
+}
+
+.pet-details-summary h1 {
+  font-size: clamp(32px, 3.7vw, 48px);
+  line-height: 1.15;
+  margin: 16px 0 6px;
+  overflow-wrap: anywhere;
+}
+
+.pet-details-summary .details-species {
+  margin: 0;
+  font-size: 14px;
+}
+
+.pet-details-summary .details-location {
+  margin: 18px 0 20px;
+  line-height: 1.5;
+}
+
+.pet-details-summary h2 {
+  font-size: clamp(18px, 2vw, 21px);
+  margin: 26px 0 10px;
+}
+
+.pet-details-summary .details-description {
+  margin: 0 0 14px;
+  overflow-wrap: anywhere;
+}
+
+.pet-details-summary .details-date {
+  display: block;
+  margin: 16px 0 0;
+  font-size: 13px;
+}
+
+.pet-details-summary .details-actions {
+  margin: 24px 0 14px;
+}
+
+.pet-details-summary .details-actions .btn {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+.pet-details-summary .privacy-note,
+.pet-details-summary .form-error {
+  overflow-wrap: anywhere;
+}
+
+.pet-details-map-panel {
+  min-width: 0;
+  margin-top: 32px;
+  padding: clamp(20px, 3vw, 32px);
+  background: #fff;
+  border: 1px solid #e8efeb;
+  border-radius: 24px;
+  box-shadow: 0 12px 32px rgba(23, 62, 55, 0.04);
+}
+
+.pet-details-map-panel .pet-location-section {
+  margin: 0;
+}
+
+.pet-details-map-panel .pet-location-heading {
+  margin-bottom: 16px;
+}
+
+.pet-details-map-panel .pet-location-heading h2 {
+  margin: 0 0 6px;
+  font-size: clamp(20px, 2.5vw, 25px);
+  line-height: 1.3;
+}
+
+.pet-details-map-panel .pet-location-heading p {
+  margin: 0;
+  font-size: 15px;
+}
+
+.pet-details-map-panel .pet-map-frame {
+  height: clamp(290px, 40vw, 410px);
+  border-radius: 16px;
+}
+
+.pet-details-map-panel .pet-map-link {
+  margin-top: 0;
+}
+
+.pet-details-map-panel .pet-map-attribution {
+  margin-bottom: 0;
+}
+
+@media (max-width: 850px) {
+  .pet-details-overview {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .pet-details-overview .details-art {
+    height: clamp(240px, 52vw, 390px);
+    max-height: none;
+    aspect-ratio: auto;
+    font-size: clamp(120px, 18vw, 170px);
+  }
+  .pet-details-summary {
+    padding: 25px;
+  }
+  .pet-details-map-panel {
+    margin-top: 24px;
+  }
+}
+
+@media (max-width: 540px) {
+  .pet-details-page {
+    padding-top: 22px;
+    padding-bottom: 48px;
+  }
+  .pet-details-page .back-button {
+    margin-bottom: 18px;
+  }
+  .pet-details-overview .details-art {
+    height: 250px;
+    border-radius: 18px;
+  }
+  .pet-details-summary,
+  .pet-details-map-panel {
+    padding: 18px;
+    border-radius: 18px;
+  }
+  .pet-details-summary h1 {
+    font-size: 34px;
+  }
+  .pet-details-summary .details-actions .btn {
+    width: 100%;
+  }
+  .pet-details-map-panel .pet-map-frame {
+    height: 270px;
+  }
+}

@@ -81,6 +81,8 @@ public class Pet {
     public String getDescription() { return description; }
     public String getCity() { return city; }
     public String getNeighborhood() { return neighborhood; }
+    public BigDecimal getLatitude() { return latitude; }
+    public BigDecimal getLongitude() { return longitude; }
     public Instant getCreatedAt() { return createdAt; }
     public AppUser getOwner() { return owner; }
     public void reunite() { this.status = PetStatus.REUNITED; }

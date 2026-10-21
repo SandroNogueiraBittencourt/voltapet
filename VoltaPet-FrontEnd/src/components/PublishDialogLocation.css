@@ -1,0 +1,124 @@
+.location-panel {
+  border: 1px solid #cbe5dc;
+  background: #f5fbf8;
+  border-radius: 13px;
+  padding: 16px;
+  display: grid;
+  gap: 12px;
+}
+
+.location-panel-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.location-panel-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 34px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: #e2f3ec;
+  font-size: 19px;
+}
+
+.location-panel-heading strong {
+  color: #274743;
+  font-size: 13px;
+}
+
+.location-panel-heading strong span {
+  color: #7a9990;
+  font-weight: 500;
+}
+
+.location-panel-heading p,
+.location-panel small {
+  margin: 4px 0 0;
+  color: #6a827b;
+  font-size: 11px;
+  line-height: 1.6;
+}
+
+.location-panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.location-button {
+  border: 1px solid #07887b;
+  border-radius: 9px;
+  padding: 10px 14px;
+  color: #087d73;
+  background: #fff;
+  font-weight: 800;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.location-button:hover:not(:disabled) {
+  background: #e7f5ef;
+}
+
+.location-button:focus-visible,
+.location-remove:focus-visible {
+  outline: 3px solid #4db7ac;
+  outline-offset: 2px;
+}
+
+.location-button:disabled,
+.location-remove:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.location-remove {
+  border: 0;
+  background: transparent;
+  color: #9b4a44;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.location-feedback {
+  margin: 0;
+  font-size: 12px;
+  color: #17796a;
+  line-height: 1.5;
+}
+
+.location-feedback-error {
+  color: #9e3e3e;
+}
+
+.location-coordinates {
+  padding: 11px 12px;
+  border: 1px solid #d3e9df;
+  border-radius: 9px;
+  background: #fff;
+  color: #355a53;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 420px) {
+  .location-panel { padding: 12px; }
+  .location-button { width: 100%; }
+}
+
+.location-address-feedback {
+  margin: 0;
+  color: #285f57;
+  background: #eaf7f0;
+  border-radius: 8px;
+  padding: 9px 11px;
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.location-panel small a { color: #087d73; text-decoration: underline; }

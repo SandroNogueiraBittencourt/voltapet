@@ -8,6 +8,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.UUID;
 import org.springframework.data.domain.Page;
@@ -49,6 +50,20 @@ public class PetController {
         }
     }
 
+    // A listagem mantém os dados anteriores; só a página de detalhes revela a região aproximada.
+    public record PetDetailResponse(UUID id, String name, PetType type, PetStatus status,
+                                    String description, String city, String neighborhood, Instant createdAt,
+                                    BigDecimal latitude, BigDecimal longitude) {
+        static PetDetailResponse from(Pet pet) {
+            return new PetDetailResponse(pet.getId(), pet.getName(), pet.getType(), pet.getStatus(),
+                pet.getDescription(), pet.getCity(), pet.getNeighborhood(), pet.getCreatedAt(),
+                approximate(pet.getLatitude()), approximate(pet.getLongitude()));
+        }
+        private static BigDecimal approximate(BigDecimal value) {
+            return value == null ? null : value.setScale(2, RoundingMode.HALF_UP);
+        }
+    }
+
     @GetMapping
     public Page<PetResponse> list(@RequestParam(required = false) PetStatus status,
                                   @RequestParam(required = false) String query,
@@ -62,7 +77,7 @@ public class PetController {
     }
 
     @GetMapping("/{id}")
-    public PetResponse get(@PathVariable UUID id) { return PetResponse.from(service.get(id)); }
+    public PetDetailResponse get(@PathVariable UUID id) { return PetDetailResponse.from(service.get(id)); }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
