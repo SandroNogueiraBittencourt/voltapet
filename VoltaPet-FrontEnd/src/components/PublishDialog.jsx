@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { apiError, publishPet } from "../api/client";
+import { apiError, publishPet, uploadPetPhoto } from "../api/client";
+import { PetPhotoInput } from "./PetPhotoInput";
 import { reverseGeocode } from "../api/reverseGeocode";
 import "./PublishDialogLocation.css";
 
@@ -29,6 +30,8 @@ export function PublishDialog({ defaultStatus, session, onClose, onPublished }) 
   const [status, setStatus] = useState(defaultStatus);
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
+  const [photo, setPhoto] = useState(null);
+  const [alreadyCreated, setAlreadyCreated] = useState(null);
   const [city, setCity] = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [geoLocation, setGeoLocation] = useState(null);
@@ -165,7 +168,20 @@ export function PublishDialog({ defaultStatus, session, onClose, onPublished }) 
     };
 
     try {
-      const created = await publishPet(payload, session.token);
+      // A ocorrência é criada primeiro; a foto vai para um endpoint protegido.
+      // Caso o upload falhe, guardamos o ID para reenviar sem duplicar ocorrências.
+      const created = alreadyCreated || await publishPet(payload, session.token);
+      if (photo) {
+        try {
+          const updated = await uploadPetPhoto(created.id, photo, session.token);
+          onPublished(updated);
+          return;
+        } catch (uploadError) {
+          setAlreadyCreated(created);
+          setError(`Ocorrência salva, mas a foto não foi enviada. ${apiError(uploadError)} Você pode tentar novamente sem duplicar a ocorrência.`);
+          return;
+        }
+      }
       onPublished(created);
     } catch (e) {
       setError(apiError(e));
@@ -244,10 +260,12 @@ export function PublishDialog({ defaultStatus, session, onClose, onPublished }) 
             </small>
           </div>
 
+          <PetPhotoInput onChange={setPhoto} disabled={pending} />
           <label>Conte o que aconteceu<textarea name="description" minLength={10} maxLength={2000} required rows="4" placeholder="Cor, porte, onde foi visto pela última vez e outras informações úteis..." /></label>
           <p className="privacy-note">🔒 Não utilize a localização da sua residência se a ocorrência foi em outro lugar. Evite compartilhar endereços privados.</p>
+          {alreadyCreated && <p className="location-feedback" role="status">Ocorrência já criada. Ao enviar novamente, apenas a foto será adicionada. Outras alterações nos campos não serão salvas.</p>}
           {error && <p className="form-error" role="alert">{error}</p>}
-          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{pending ? "Publicando..." : "Publicar ocorrência"}</button>
+          <button type="submit" className="btn btn-primary btn-block" disabled={busy}>{pending ? "Enviando..." : alreadyCreated ? "Tentar enviar foto novamente" : "Publicar ocorrência"}</button>
         </form>
       </section>
     </div>

@@ -11,9 +11,12 @@ export const typeLabels = { DOG: "Cachorro", CAT: "Gato", OTHER: "Outro animal" 
 export function PetCard({ pet }) {
   return (
     <article className="pet-card">
-      <div className={`pet-card-illustration type-${pet.type.toLowerCase()}`} aria-hidden="true">
-        <span>{pet.type === "DOG" ? "🐕" : pet.type === "CAT" ? "🐈" : "🐾"}</span>
-        <span className="card-glow" />
+      <div className={`pet-card-illustration type-${pet.type.toLowerCase()}`}>
+        {pet.photoUrl ? (
+          <img className="pet-photo-image" src={pet.photoUrl} alt={`Foto de ${pet.name}`} loading="lazy" />
+        ) : (
+          <><span aria-hidden="true">{pet.type === "DOG" ? "🐕" : pet.type === "CAT" ? "🐈" : "🐾"}</span><span className="card-glow" /></>
+        )}
       </div>
       <div className="pet-card-body">
         <span className={`status-pill status-${pet.status.toLowerCase()}`}>

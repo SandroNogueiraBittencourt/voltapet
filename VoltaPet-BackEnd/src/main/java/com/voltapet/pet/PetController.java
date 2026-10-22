@@ -15,6 +15,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.CacheControl;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,7 +35,11 @@ import org.springframework.web.server.ResponseStatusException;
 @RequestMapping("/api/v1/pets")
 public class PetController {
     private final PetService service;
-    public PetController(PetService service) { this.service = service; }
+    private final PetPhotoService photos;
+    public PetController(PetService service, PetPhotoService photos) {
+        this.service = service;
+        this.photos = photos;
+    }
 
     public record CreatePetRequest(
         @NotBlank @Size(max = 100) String name,
@@ -43,25 +52,32 @@ public class PetController {
         @DecimalMin("-180.0") @DecimalMax("180.0") BigDecimal longitude) { }
 
     public record PetResponse(UUID id, String name, PetType type, PetStatus status,
-                              String description, String city, String neighborhood, Instant createdAt) {
+                              String description, String city, String neighborhood, Instant createdAt,
+                              String photoUrl) {
         static PetResponse from(Pet pet) {
             return new PetResponse(pet.getId(), pet.getName(), pet.getType(),
-                pet.getStatus(), pet.getDescription(), pet.getCity(), pet.getNeighborhood(), pet.getCreatedAt());
-        }
+		pet.getStatus(), pet.getDescription(), pet.getCity(),
+		pet.getNeighborhood(), pet.getCreatedAt(),
+		PetController.photoUrl(pet));
+	}
     }
 
     // A listagem mantém os dados anteriores; só a página de detalhes revela a região aproximada.
     public record PetDetailResponse(UUID id, String name, PetType type, PetStatus status,
                                     String description, String city, String neighborhood, Instant createdAt,
-                                    BigDecimal latitude, BigDecimal longitude) {
+                                    BigDecimal latitude, BigDecimal longitude, String photoUrl) {
         static PetDetailResponse from(Pet pet) {
             return new PetDetailResponse(pet.getId(), pet.getName(), pet.getType(), pet.getStatus(),
                 pet.getDescription(), pet.getCity(), pet.getNeighborhood(), pet.getCreatedAt(),
-                approximate(pet.getLatitude()), approximate(pet.getLongitude()));
+                approximate(pet.getLatitude()), approximate(pet.getLongitude()),  PetController.photoUrl(pet));
         }
         private static BigDecimal approximate(BigDecimal value) {
             return value == null ? null : value.setScale(2, RoundingMode.HALF_UP);
         }
+    }
+
+    private static String photoUrl(Pet pet) {
+        return pet.getPhotoKey() == null ? null : "/api/v1/pets/" + pet.getId() + "/photo";
     }
 
     @GetMapping
@@ -84,6 +100,21 @@ public class PetController {
     public PetResponse create(@Valid @RequestBody CreatePetRequest request,
                               @AuthenticationPrincipal AppUser user) {
         return PetResponse.from(service.create(request, user));
+    }
+
+    @PostMapping(value = "/{id}/photo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public PetDetailResponse uploadPhoto(@PathVariable UUID id,
+                                          @RequestPart("file") MultipartFile file,
+                                          @AuthenticationPrincipal AppUser user) {
+        return PetDetailResponse.from(photos.upload(id, user, file));
+    }
+
+    @GetMapping(value = "/{id}/photo", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> getPhoto(@PathVariable UUID id) {
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .contentType(MediaType.IMAGE_JPEG)
+            .body(photos.getPhoto(id));
     }
 
     @PostMapping("/{id}/reunite")

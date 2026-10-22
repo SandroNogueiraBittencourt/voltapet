@@ -49,6 +49,9 @@ public class Pet {
     @Column(precision = 9, scale = 6)
     private BigDecimal longitude;
 
+    @Column(name = "photo_key", length = 255)
+    private String photoKey;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -84,6 +87,8 @@ public class Pet {
     public BigDecimal getLatitude() { return latitude; }
     public BigDecimal getLongitude() { return longitude; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getPhotoKey() { return photoKey; }
+    public void setPhotoKey(String photoKey) { this.photoKey = photoKey; }
     public AppUser getOwner() { return owner; }
     public void reunite() { this.status = PetStatus.REUNITED; }
 }

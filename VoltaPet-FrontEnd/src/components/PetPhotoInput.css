@@ -1,0 +1,14 @@
+.pet-photo-panel{border:1px dashed #b8d9d1;background:#f5fbf8;border-radius:14px;padding:16px;display:grid;gap:12px}
+.pet-photo-heading{display:flex;gap:11px;align-items:flex-start}
+.pet-photo-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;background:#e2f3ec;font-size:20px;flex-shrink:0}
+.pet-photo-heading strong{font-size:14px;color:#274743}
+.pet-photo-heading strong span{font-weight:400;color:#758c84}
+.pet-photo-heading p{font-size:12px;color:#6a827b;margin:5px 0 0;line-height:1.55}
+.pet-photo-select{position:relative;display:flex;justify-content:center;align-items:center;min-height:56px;padding:12px;border:1px solid #0b857d;border-radius:10px;color:#087f78;font-weight:700;background:#fff;cursor:pointer;text-align:center}
+.pet-photo-select:hover,.pet-photo-select:focus-within{background:#eaf8f3;outline-offset:3px}
+.pet-photo-select input{position:absolute;inset:0;opacity:0;width:100%;height:100%;cursor:pointer}
+.pet-photo-preview-wrap{display:grid;gap:8px;justify-items:start}
+.pet-photo-preview{width:min(100%,340px);height:185px;object-fit:cover;border-radius:12px;border:1px solid #d2e5de;background:#fff}
+.pet-photo-remove{border:0;background:none;padding:5px 0;color:#a5413b;font-weight:700;font-size:13px}
+.pet-photo-panel .form-error{margin:0}
+.pet-photo-image{display:block;width:100%;height:100%;object-fit:cover;object-position:center}
