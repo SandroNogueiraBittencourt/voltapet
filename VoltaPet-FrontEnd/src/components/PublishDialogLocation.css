@@ -122,3 +122,8 @@
 }
 
 .location-panel small a { color: #087d73; text-decoration: underline; }
+
+/* Espécie informada quando Tipo de animal = Outro. */
+.form-grid .other-animal-field {
+  grid-column: 1 / -1;
+}

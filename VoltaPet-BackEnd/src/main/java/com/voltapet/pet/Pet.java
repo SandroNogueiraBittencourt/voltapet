@@ -30,6 +30,9 @@ public class Pet {
     @Column(name = "pet_type", nullable = false, length = 20)
     private PetType type;
 
+    @Column(name = "other_animal_type", length = 100)
+    private String otherAnimalType;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PetStatus status;
@@ -69,6 +72,13 @@ public class Pet {
 
     public Pet(String name, PetType type, PetStatus status, String description,
                String city, String neighborhood, BigDecimal latitude, BigDecimal longitude, AppUser owner) {
+        this(name, type, status, description, city, neighborhood, latitude, longitude, owner, null);
+    }
+
+    public Pet(String name, PetType type, PetStatus status, String description,
+               String city, String neighborhood, BigDecimal latitude, BigDecimal longitude,
+               AppUser owner, String otherAnimalType) {
+        this.otherAnimalType = otherAnimalType;
         this.name = name;
         this.type = type;
         this.status = status;
@@ -86,6 +96,7 @@ public class Pet {
     public UUID getId() { return id; }
     public String getName() { return name; }
     public PetType getType() { return type; }
+    public String getOtherAnimalType() { return otherAnimalType; }
     public PetStatus getStatus() { return status; }
     public String getDescription() { return description; }
     public String getCity() { return city; }

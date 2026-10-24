@@ -38,9 +38,16 @@ public class PetService {
         if ((request.latitude() == null) != (request.longitude() == null)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Informe latitude e longitude juntas");
         }
+        String animalLabel = request.otherAnimalType() == null ? null : request.otherAnimalType().trim();
+        if (request.type() == PetType.OTHER && (animalLabel == null || animalLabel.isBlank())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Especifique qual é o animal");
+        }
+        if (request.type() != PetType.OTHER && animalLabel != null && !animalLabel.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Use a identificação adicional somente para Outro");
+        }
         return repository.save(new Pet(request.name().trim(), request.type(), request.status(),
             request.description().trim(), request.city().trim(), request.neighborhood().trim(),
-            request.latitude(), request.longitude(), user));
+            request.latitude(), request.longitude(), user, request.type() == PetType.OTHER ? animalLabel : null));
     }
 
     @Transactional

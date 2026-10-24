@@ -51,27 +51,34 @@ public class PetController {
         @NotBlank @Size(max = 100) String city,
         @NotBlank @Size(max = 100) String neighborhood,
         @DecimalMin("-90.0") @DecimalMax("90.0") BigDecimal latitude,
-        @DecimalMin("-180.0") @DecimalMax("180.0") BigDecimal longitude) { }
+        @DecimalMin("-180.0") @DecimalMax("180.0") BigDecimal longitude,
+        @Size(max = 100) String otherAnimalType) {
+        // Mantém compatibilidade dos testes/chamadas Java que usam oito argumentos.
+        public CreatePetRequest(String name, PetType type, PetStatus status, String description,
+                                String city, String neighborhood, BigDecimal latitude, BigDecimal longitude) {
+            this(name, type, status, description, city, neighborhood, latitude, longitude, null);
+        }
+    }
 
     public record PetResponse(UUID id, String name, PetType type, PetStatus status,
                               String description, String city, String neighborhood, Instant createdAt,
-                              String photoUrl, List<String> photoUrls) {
+                              String photoUrl, List<String> photoUrls, String otherAnimalType) {
         static PetResponse from(Pet pet) {
             return new PetResponse(pet.getId(), pet.getName(), pet.getType(),
 		pet.getStatus(), pet.getDescription(), pet.getCity(),
 		pet.getNeighborhood(), pet.getCreatedAt(),
-		PetController.photoUrl(pet), PetController.photoUrls(pet));
+		PetController.photoUrl(pet), PetController.photoUrls(pet), pet.getOtherAnimalType());
 	}
     }
 
     // A listagem mantém os dados anteriores; só a página de detalhes revela a região aproximada.
     public record PetDetailResponse(UUID id, String name, PetType type, PetStatus status,
                                     String description, String city, String neighborhood, Instant createdAt,
-                                    BigDecimal latitude, BigDecimal longitude, String photoUrl, List<String> photoUrls) {
+                                    BigDecimal latitude, BigDecimal longitude, String photoUrl, List<String> photoUrls, String otherAnimalType) {
         static PetDetailResponse from(Pet pet) {
             return new PetDetailResponse(pet.getId(), pet.getName(), pet.getType(), pet.getStatus(),
                 pet.getDescription(), pet.getCity(), pet.getNeighborhood(), pet.getCreatedAt(),
-                approximate(pet.getLatitude()), approximate(pet.getLongitude()),  PetController.photoUrl(pet), PetController.photoUrls(pet));
+                approximate(pet.getLatitude()), approximate(pet.getLongitude()),  PetController.photoUrl(pet), PetController.photoUrls(pet), pet.getOtherAnimalType());
         }
         private static BigDecimal approximate(BigDecimal value) {
             return value == null ? null : value.setScale(2, RoundingMode.HALF_UP);

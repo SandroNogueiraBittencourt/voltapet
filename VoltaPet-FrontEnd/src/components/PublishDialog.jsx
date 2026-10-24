@@ -28,6 +28,7 @@ function locationErrorMessage(error) {
 
 export function PublishDialog({ defaultStatus, session, onClose, onPublished }) {
   const [status, setStatus] = useState(defaultStatus);
+  const [animalType, setAnimalType] = useState("DOG");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
   const [photos, setPhotos] = useState([]);
@@ -157,6 +158,8 @@ export function PublishDialog({ defaultStatus, session, onClose, onPublished }) 
     const payload = {
       ...form,
       status,
+      type: animalType,
+      ...(animalType === "OTHER" ? { otherAnimalType: String(form.otherAnimalType ?? "").trim() } : {}),
       name: form.name.trim(),
       city: city.trim(),
       neighborhood: neighborhood.trim(),
@@ -210,7 +213,13 @@ export function PublishDialog({ defaultStatus, session, onClose, onPublished }) 
           </fieldset>
           <div className="form-grid">
             <label>Nome do pet<input name="name" required maxLength={100} placeholder="Ex.: Luna ou Não identificado" /></label>
-            <label>Tipo de animal<select name="type" required defaultValue="DOG"><option value="DOG">Cachorro</option><option value="CAT">Gato</option><option value="OTHER">Outro</option></select></label>
+            <label>Tipo de animal<select name="type" required value={animalType} onChange={(event) => setAnimalType(event.target.value)}><option value="DOG">Cachorro</option><option value="CAT">Gato</option><option value="OTHER">Outro</option></select></label>
+            {animalType === "OTHER" && (
+              <label className="other-animal-field">
+                Qual animal?
+                <input name="otherAnimalType" required maxLength={100} placeholder="Ex.: Coelho, tartaruga, papagaio" autoComplete="off" />
+              </label>
+            )}
             <label>Cidade<input name="city" required maxLength={100} placeholder="Ex.: Florianópolis" value={city} onChange={(event) => { cityEditedRef.current = true; setCity(event.target.value); }} /></label>
             <label>Bairro<input name="neighborhood" required maxLength={100} placeholder="Ex.: Trindade" value={neighborhood} onChange={(event) => { neighborhoodEditedRef.current = true; setNeighborhood(event.target.value); }} /></label>
           </div>

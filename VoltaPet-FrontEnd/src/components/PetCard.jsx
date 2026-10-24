@@ -8,6 +8,13 @@ export const statusLabels = {
 
 export const typeLabels = { DOG: "Cachorro", CAT: "Gato", OTHER: "Outro animal" };
 
+export function petTypeLabel(pet) {
+  if (pet.type === "OTHER" && typeof pet.otherAnimalType === "string" && pet.otherAnimalType.trim()) {
+    return pet.otherAnimalType.trim();
+  }
+  return typeLabels[pet.type] ?? "Animal";
+}
+
 export function PetCard({ pet }) {
   return (
     <article className="pet-card">
@@ -24,7 +31,7 @@ export function PetCard({ pet }) {
         </span>
         <div className="card-title-row">
           <h3>{pet.name}</h3>
-          <span className="pet-type">{typeLabels[pet.type]}</span>
+          <span className="pet-type">{petTypeLabel(pet)}</span>
         </div>
         <p className="pet-place">📍 {pet.neighborhood}, {pet.city}</p>
         <p className="pet-excerpt">{pet.description}</p>
