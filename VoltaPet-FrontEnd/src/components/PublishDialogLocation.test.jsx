@@ -6,7 +6,7 @@ import { publishPet } from "../api/client";
 vi.mock("../api/client", () => ({
   apiError: () => "Falha no servidor",
   publishPet: vi.fn(),
-  uploadPetPhoto: vi.fn(),
+  uploadPetPhotos: vi.fn(),
 }));
 
 const samplePosition = {

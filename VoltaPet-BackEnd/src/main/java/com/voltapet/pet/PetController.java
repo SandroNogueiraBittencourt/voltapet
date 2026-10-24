@@ -11,6 +11,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.UUID;
+import java.util.List;
+import java.util.ArrayList;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -53,23 +55,23 @@ public class PetController {
 
     public record PetResponse(UUID id, String name, PetType type, PetStatus status,
                               String description, String city, String neighborhood, Instant createdAt,
-                              String photoUrl) {
+                              String photoUrl, List<String> photoUrls) {
         static PetResponse from(Pet pet) {
             return new PetResponse(pet.getId(), pet.getName(), pet.getType(),
 		pet.getStatus(), pet.getDescription(), pet.getCity(),
 		pet.getNeighborhood(), pet.getCreatedAt(),
-		PetController.photoUrl(pet));
+		PetController.photoUrl(pet), PetController.photoUrls(pet));
 	}
     }
 
     // A listagem mantém os dados anteriores; só a página de detalhes revela a região aproximada.
     public record PetDetailResponse(UUID id, String name, PetType type, PetStatus status,
                                     String description, String city, String neighborhood, Instant createdAt,
-                                    BigDecimal latitude, BigDecimal longitude, String photoUrl) {
+                                    BigDecimal latitude, BigDecimal longitude, String photoUrl, List<String> photoUrls) {
         static PetDetailResponse from(Pet pet) {
             return new PetDetailResponse(pet.getId(), pet.getName(), pet.getType(), pet.getStatus(),
                 pet.getDescription(), pet.getCity(), pet.getNeighborhood(), pet.getCreatedAt(),
-                approximate(pet.getLatitude()), approximate(pet.getLongitude()),  PetController.photoUrl(pet));
+                approximate(pet.getLatitude()), approximate(pet.getLongitude()),  PetController.photoUrl(pet), PetController.photoUrls(pet));
         }
         private static BigDecimal approximate(BigDecimal value) {
             return value == null ? null : value.setScale(2, RoundingMode.HALF_UP);
@@ -78,6 +80,16 @@ public class PetController {
 
     private static String photoUrl(Pet pet) {
         return pet.getPhotoKey() == null ? null : "/api/v1/pets/" + pet.getId() + "/photo";
+    }
+
+    private static List<String> photoUrls(Pet pet) {
+        List<String> urls = new ArrayList<>(3);
+        for (int slot = 1; slot <= 3; slot++) {
+            if (pet.getPhotoKey(slot) != null) {
+                urls.add("/api/v1/pets/" + pet.getId() + "/photos/" + slot);
+            }
+        }
+        return List.copyOf(urls);
     }
 
     @GetMapping
@@ -107,6 +119,21 @@ public class PetController {
                                           @RequestPart("file") MultipartFile file,
                                           @AuthenticationPrincipal AppUser user) {
         return PetDetailResponse.from(photos.upload(id, user, file));
+    }
+
+    @PostMapping(value = "/{id}/photos", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public PetDetailResponse uploadPhotos(@PathVariable UUID id,
+                                          @RequestPart("files") List<MultipartFile> files,
+                                          @AuthenticationPrincipal AppUser user) {
+        return PetDetailResponse.from(photos.uploadMany(id, user, files));
+    }
+
+    @GetMapping(value = "/{id}/photos/{position}", produces = MediaType.IMAGE_JPEG_VALUE)
+    public ResponseEntity<byte[]> getPhotoAt(@PathVariable UUID id, @PathVariable int position) {
+        return ResponseEntity.ok()
+            .cacheControl(CacheControl.noStore())
+            .contentType(MediaType.IMAGE_JPEG)
+            .body(photos.getPhoto(id, position));
     }
 
     @GetMapping(value = "/{id}/photo", produces = MediaType.IMAGE_JPEG_VALUE)

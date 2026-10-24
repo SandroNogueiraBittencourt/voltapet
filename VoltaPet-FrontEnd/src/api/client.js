@@ -45,6 +45,16 @@ export async function uploadPetPhoto(id, file, token) {
   return data;
 }
 
+export async function uploadPetPhotos(id, files, token) {
+  const form = new FormData();
+  for (const file of files) form.append("files", file);
+  const { data } = await client.post(`/pets/${encodeURIComponent(id)}/photos`, form, {
+    headers: { Authorization: `Bearer ${token}` },
+    timeout: 60000,
+  });
+  return data;
+}
+
 export async function reunitePet(id, token) {
   const { data } = await client.post(`/pets/${encodeURIComponent(id)}/reunite`, {}, {
     headers: { Authorization: `Bearer ${token}` },

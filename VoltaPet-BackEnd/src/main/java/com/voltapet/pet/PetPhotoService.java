@@ -8,6 +8,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Iterator;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.UUID;
 import javax.imageio.ImageIO;
@@ -23,6 +25,7 @@ import org.springframework.web.server.ResponseStatusException;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.model.CreateBucketRequest;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.GetObjectRequest;
 import software.amazon.awssdk.services.s3.model.HeadBucketRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
@@ -64,15 +67,69 @@ public class PetPhotoService {
         return repository.save(pet);
     }
 
+    /** Anexa 1 a 3 imagens novas sem sobrescrever as existentes. */
+    @Transactional
+    public Pet uploadMany(UUID petId, AppUser user, List<MultipartFile> files) {
+        Pet pet = repository.findForPhotoUpload(petId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ocorrência não encontrada"));
+        if (user == null || !pet.getOwner().getId().equals(user.getId())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Apenas o autor pode adicionar fotos");
+        }
+        if (files == null || files.isEmpty() || files.size() > 3) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Envie de 1 a 3 fotos");
+        }
+        List<Integer> slots = new ArrayList<>();
+        for (int index = 1; index <= 3; index++) {
+            if (pet.getPhotoKey(index) == null) slots.add(index);
+        }
+        if (files.size() > slots.size()) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Este animal já atingiu o limite de 3 fotos");
+        }
+
+        // Valida todas antes de iniciar gravações no MinIO.
+        List<byte[]> images = new ArrayList<>();
+        for (MultipartFile file : files) images.add(convertToSafeJpeg(file));
+        List<String> uploadedKeys = new ArrayList<>();
+        try {
+            ensureBucket();
+            for (int i = 0; i < images.size(); i++) {
+                int position = slots.get(i);
+                String key = "pets/" + petId + "/photo-" + position + "-" + UUID.randomUUID() + ".jpg";
+                storage.putObject(PutObjectRequest.builder().bucket(bucket).key(key)
+                    .contentType("image/jpeg").build(), RequestBody.fromBytes(images.get(i)));
+                uploadedKeys.add(key);
+            }
+        } catch (S3Exception | SdkClientException ex) {
+            // Compensa as imagens gravadas nesta tentativa quando algum envio falhar.
+            for (String key : uploadedKeys) {
+                try { storage.deleteObject(DeleteObjectRequest.builder().bucket(bucket).key(key).build()); }
+                catch (RuntimeException ignored) { /* limpeza poderá ser feita depois */ }
+            }
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                "Não foi possível enviar todas as fotos. Tente novamente.");
+        }
+        for (int i = 0; i < uploadedKeys.size(); i++) {
+            pet.setPhotoKey(slots.get(i), uploadedKeys.get(i));
+        }
+        return repository.save(pet);
+    }
+
     @Transactional(readOnly = true)
-    public byte[] getPhoto(UUID petId) {
+    public byte[] getPhoto(UUID petId) { return getPhoto(petId, 1); }
+
+    @Transactional(readOnly = true)
+    public byte[] getPhoto(UUID petId, int position) {
+        if (position < 1 || position > 3) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Foto não disponível");
+        }
         Pet pet = findPet(petId);
-        if (pet.getPhotoKey() == null) {
+        String photoKey = pet.getPhotoKey(position);
+        if (photoKey == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Foto não disponível");
         }
         try {
             return storage.getObjectAsBytes(GetObjectRequest.builder()
-                .bucket(bucket).key(pet.getPhotoKey()).build()).asByteArray();
+                .bucket(bucket).key(photoKey).build()).asByteArray();
         } catch (S3Exception ex) {
             if (ex.statusCode() == 404) {
                 throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Foto não disponível");

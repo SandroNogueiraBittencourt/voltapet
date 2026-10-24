@@ -52,6 +52,12 @@ public class Pet {
     @Column(name = "photo_key", length = 255)
     private String photoKey;
 
+    @Column(name = "photo_key_2", length = 255)
+    private String photoKey2;
+
+    @Column(name = "photo_key_3", length = 255)
+    private String photoKey3;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -89,6 +95,29 @@ public class Pet {
     public Instant getCreatedAt() { return createdAt; }
     public String getPhotoKey() { return photoKey; }
     public void setPhotoKey(String photoKey) { this.photoKey = photoKey; }
+    public String getPhotoKey2() { return photoKey2; }
+    public String getPhotoKey3() { return photoKey3; }
+    public String getPhotoKey(int position) {
+        return switch (position) {
+            case 1 -> photoKey;
+            case 2 -> photoKey2;
+            case 3 -> photoKey3;
+            default -> null;
+        };
+    }
+    public void setPhotoKey(int position, String key) {
+        switch (position) {
+            case 1 -> photoKey = key;
+            case 2 -> photoKey2 = key;
+            case 3 -> photoKey3 = key;
+            default -> throw new IllegalArgumentException("Posição deve estar entre 1 e 3");
+        }
+    }
+    public int getPhotoCount() {
+        int count = 0;
+        for (int index = 1; index <= 3; index++) if (getPhotoKey(index) != null) count++;
+        return count;
+    }
     public AppUser getOwner() { return owner; }
     public void reunite() { this.status = PetStatus.REUNITED; }
 }
