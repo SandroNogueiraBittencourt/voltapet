@@ -18,8 +18,10 @@ export async function listPets({ status, query }) {
   return data;
 }
 
-export async function getPet(id) {
-  const { data } = await client.get(`/pets/${encodeURIComponent(id)}`);
+export async function getPet(id, token) {
+  const { data } = await client.get(`/pets/${encodeURIComponent(id)}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
   return data;
 }
 
@@ -58,6 +60,31 @@ export async function uploadPetPhotos(id, files, token) {
 export async function reunitePet(id, token) {
   const { data } = await client.post(`/pets/${encodeURIComponent(id)}/reunite`, {}, {
     headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+}
+
+// Um avistamento pode conter dados privados. O servidor exige sessão válida.
+export async function createSighting(petId, payload, files, token) {
+  const form = new FormData();
+  form.append("data", new Blob([JSON.stringify(payload)], { type: "application/json" }), "avistamento.json");
+  files.forEach((file) => form.append("files", file));
+  const { data } = await client.post(`/pets/${encodeURIComponent(petId)}/sightings`, form, {
+    headers: { Authorization: `Bearer ${token}` }, timeout: 90000,
+  });
+  return data;
+}
+
+export async function listSightings(petId, token) {
+  const { data } = await client.get(`/pets/${encodeURIComponent(petId)}/sightings`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+  return data;
+}
+
+export async function getSightingMedia(petId, sightingId, slot, token) {
+  const { data } = await client.get(`/pets/${encodeURIComponent(petId)}/sightings/${encodeURIComponent(sightingId)}/media/${slot}`, {
+    headers: { Authorization: `Bearer ${token}` }, responseType: "blob", timeout: 90000,
   });
   return data;
 }

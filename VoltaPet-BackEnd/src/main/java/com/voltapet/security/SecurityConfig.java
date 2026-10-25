@@ -29,6 +29,8 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/actuator/health", "/actuator/info", "/v3/api-docs/**", "/swagger-ui/**").permitAll()
                 .requestMatchers("/api/v1/auth/**").permitAll()
+                // Relatos e anexos são confidenciais: proteger antes do GET público.
+                .requestMatchers(HttpMethod.GET, "/api/v1/pets/*/sightings", "/api/v1/pets/*/sightings/**").authenticated()
                 .requestMatchers(HttpMethod.GET, "/api/v1/pets", "/api/v1/pets/**").permitAll()
                 .anyRequest().authenticated())
             .addFilterBefore(filter, UsernamePasswordAuthenticationFilter.class)

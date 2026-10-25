@@ -74,11 +74,13 @@ public class PetController {
     // A listagem mantém os dados anteriores; só a página de detalhes revela a região aproximada.
     public record PetDetailResponse(UUID id, String name, PetType type, PetStatus status,
                                     String description, String city, String neighborhood, Instant createdAt,
-                                    BigDecimal latitude, BigDecimal longitude, String photoUrl, List<String> photoUrls, String otherAnimalType) {
-        static PetDetailResponse from(Pet pet) {
+                                    BigDecimal latitude, BigDecimal longitude, String photoUrl, List<String> photoUrls, String otherAnimalType, boolean isOwner) {
+        static PetDetailResponse from(Pet pet) { return from(pet, null); }
+        static PetDetailResponse from(Pet pet, AppUser viewer) {
             return new PetDetailResponse(pet.getId(), pet.getName(), pet.getType(), pet.getStatus(),
                 pet.getDescription(), pet.getCity(), pet.getNeighborhood(), pet.getCreatedAt(),
-                approximate(pet.getLatitude()), approximate(pet.getLongitude()),  PetController.photoUrl(pet), PetController.photoUrls(pet), pet.getOtherAnimalType());
+                approximate(pet.getLatitude()), approximate(pet.getLongitude()),  PetController.photoUrl(pet), PetController.photoUrls(pet), pet.getOtherAnimalType(),
+                viewer != null && pet.getOwner().getId().equals(viewer.getId()));
         }
         private static BigDecimal approximate(BigDecimal value) {
             return value == null ? null : value.setScale(2, RoundingMode.HALF_UP);
@@ -112,7 +114,9 @@ public class PetController {
     }
 
     @GetMapping("/{id}")
-    public PetDetailResponse get(@PathVariable UUID id) { return PetDetailResponse.from(service.get(id)); }
+    public PetDetailResponse get(@PathVariable UUID id, @AuthenticationPrincipal AppUser viewer) {
+        return PetDetailResponse.from(service.get(id), viewer);
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)

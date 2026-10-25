@@ -1,0 +1,26 @@
+.sighting-dialog { max-width:640px; }
+.sighting-dialog .modal-subtitle { margin-bottom:16px; }
+.sighting-dialog .stacked-form { gap:14px; }
+.sighting-uploads { border:1px dashed #b5dcd3; background:#f6fbf8; border-radius:14px; padding:14px; display:grid; gap:12px; }
+.sighting-uploads input[type=file] { background:#fff; }
+.sighting-preview-list { display:flex; gap:10px; flex-wrap:wrap; }
+.sighting-preview { position:relative; width:104px; height:104px; }
+.sighting-preview img { width:100%; height:100%; object-fit:cover; border-radius:10px; }
+.sighting-preview button { position:absolute; top:3px; right:3px; border:0; border-radius:50%; background:#fff; color:#9d2222; font-size:18px; }
+.sighting-file-name { font-size:12px; overflow-wrap:anywhere; margin:0; }
+.sighting-file-name button { border:0; color:#9d2222; background:none; text-decoration:underline; }
+.sighting-secondary-action { margin-left:10px; }
+.sighting-success { color:#087f78; font-size:13px; padding:12px; background:#eaf7f1; border-radius:10px; }
+.sighting-owner-note { font-size:13px; color:#6a8180; }
+.sighting-reports { margin:24px 0 0; border:1px solid #e2eee9; border-radius:20px; padding:24px; background:#fff; }
+.sighting-report-card { background:#f8fcfa; border:1px solid #dceee8; border-radius:14px; padding:18px; margin-top:16px; }
+.sighting-report-card p { font-size:13px; line-height:1.6; margin:8px 0; overflow-wrap:anywhere; }
+.sighting-media-list { display:flex; flex-wrap:wrap; gap:12px; margin-top:12px; align-items:center; }
+.sighting-media-list img,.sighting-media-list video { width:min(190px,100%); max-height:170px; border-radius:10px; object-fit:contain; background:#eef6f3; }
+.sighting-media-error,.sighting-media-loading { font-size:12px; color:#6a8180; }
+@media(max-width:680px) { .sighting-dialog { padding:24px 18px; } .sighting-secondary-action { display:block; margin:10px 0 0; } .sighting-reports { padding:16px; } }
+
+.sighting-media-group .btn { font-size:12px; padding:9px 14px; margin-top:8px; }
+
+.sighting-cep-feedback { margin: -4px 0 4px; font-size: 12px; line-height: 1.5; color: #087f78; }
+.sighting-cep-error { color: #a13030; }

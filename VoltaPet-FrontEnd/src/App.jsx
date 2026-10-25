@@ -7,6 +7,9 @@ import { PetCard, statusLabels, petTypeLabel } from "./components/PetCard";
 import { PublishDialog } from "./components/PublishDialog";
 import { PetLocationMap } from "./components/PetLocationMap";
 import { PetPhotoGallery } from "./components/PetPhotoGallery";
+import { SightingDialog } from "./components/SightingDialog";
+import { SightingReports } from "./components/SightingReports";
+import { canReportSighting } from "./utils/sightingAccess";
 import "./components/PetDetailsLayout.css";
 import "./components/PetPhotoInput.css";
 import "./components/PetPhotoGallery.css";
@@ -108,11 +111,37 @@ function PetDetails({ session, openAuth }) {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { data: pet, isPending, isError } = useQuery({ queryKey: ["pet", id], queryFn: () => getPet(id) });
+  const { data: pet, isPending, isError } = useQuery({
+    queryKey: ["pet", id, session?.token ?? null],
+    queryFn: () => getPet(id, session?.token),
+  });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [sightingOpen, setSightingOpen] = useState(false);
+  const [wantsSighting, setWantsSighting] = useState(false);
+  const [sent, setSent] = useState(false);
+  const [showReports, setShowReports] = useState(false);
+
+  // Depois do login, confirmar na API se a pessoa é autora.
+  useEffect(() => {
+    if (!session || !wantsSighting || isPending) return;
+    setWantsSighting(false);
+    if (canReportSighting(pet)) setSightingOpen(true);
+  }, [session, wantsSighting, isPending, pet]);
+
+  // Evita abrir o formulário para o autor, inclusive se a sessão mudou.
+  useEffect(() => {
+    if (!canReportSighting(pet)) setSightingOpen(false);
+  }, [pet?.id, pet?.isOwner, pet?.status]);
+
+  function seen() {
+    if (!canReportSighting(pet)) return;
+    if (!session) { setWantsSighting(true); openAuth(); return; }
+    setSightingOpen(true);
+  }
+
   async function reunited() {
-    if (!session) { openAuth(); return; }
+    if (!session || !pet.isOwner) return;
     setBusy(true);
     setError("");
     try {
@@ -121,9 +150,35 @@ function PetDetails({ session, openAuth }) {
       await queryClient.invalidateQueries({ queryKey: ["pets"] });
     } catch (e) { setError(apiError(e)); } finally { setBusy(false); }
   }
+
   if (isPending) return <main className="shell details-page"><p>Carregando ocorrência...</p></main>;
   if (isError) return <main className="shell details-page"><h1>Ocorrência não encontrada</h1><Link to="/" className="btn btn-outline">Voltar ao início</Link></main>;
-  return <main className="shell details-page pet-details-page"><button className="back-button" onClick={() => navigate(-1)}>← Voltar</button><div className="pet-details-overview"><PetPhotoGallery key={pet.id} pet={pet} /><article className="details-content pet-details-summary"><span className={`status-pill status-${pet.status.toLowerCase()}`}>{statusLabels[pet.status]}</span><h1>{pet.name}</h1><p className="details-species">{petTypeLabel(pet)}</p><p className="details-location">📍 {pet.neighborhood}, {pet.city}</p><h2>Sobre essa ocorrência</h2><p className="details-description">{pet.description}</p><p className="details-date">Publicado em {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(pet.createdAt))}</p><div className="details-actions">{pet.status !== "REUNITED" && <button className="btn btn-primary" disabled={busy} onClick={reunited}>{busy ? "Atualizando..." : "Marcar como reencontrado"}</button>}</div>{pet.status !== "REUNITED" && <p className="privacy-note">Somente quem publicou a ocorrência pode marcá-la como resolvida. Por segurança, dados de contato não são divulgados publicamente nesta versão.</p>}{error && <p className="form-error" role="alert">{error}</p>}</article></div><div className="pet-details-map-panel"><PetLocationMap pet={pet} /></div></main>;
+  return <main className="shell details-page pet-details-page">
+    <button className="back-button" onClick={() => navigate(-1)}>← Voltar</button>
+    <div className="pet-details-overview">
+      <PetPhotoGallery key={pet.id} pet={pet} />
+      <article className="details-content pet-details-summary">
+        <span className={`status-pill status-${pet.status.toLowerCase()}`}>{statusLabels[pet.status]}</span>
+        <h1>{pet.name}</h1>
+        <p className="details-species">{petTypeLabel(pet)}</p>
+        <p className="details-location">📍 {pet.neighborhood}, {pet.city}</p>
+        <h2>Sobre essa ocorrência</h2>
+        <p className="details-description">{pet.description}</p>
+        <p className="details-date">Publicado em {new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "long", year: "numeric" }).format(new Date(pet.createdAt))}</p>
+        <div className="details-actions">
+          {canReportSighting(pet) && <button type="button" className="btn btn-primary" onClick={seen}>👀 Visto</button>}
+          {pet.isOwner && pet.status !== "REUNITED" && <button type="button" className="btn btn-outline sighting-secondary-action" disabled={busy} onClick={reunited}>{busy ? "Atualizando..." : "Marcar como reencontrado"}</button>}
+          {pet.isOwner && <button type="button" className="btn btn-outline sighting-secondary-action" onClick={() => setShowReports(value => !value)}>{showReports ? "Ocultar avistamentos" : "Ver avistamentos recebidos"}</button>}
+        </div>
+        {canReportSighting(pet) && <p className="privacy-note">Viu este pet? Clique em <strong>Visto</strong> para registrar o endereço, data e horário. Os detalhes serão enviados em segurança ao autor da ocorrência.</p>}
+        {sent && <p className="sighting-success" role="status">Avistamento enviado! Obrigado por ajudar.</p>}
+        {error && <p className="form-error" role="alert">{error}</p>}
+      </article>
+    </div>
+    <div className="pet-details-map-panel"><PetLocationMap pet={pet} /></div>
+    {pet.isOwner && showReports && session && <SightingReports petId={pet.id} token={session.token} />}
+    {sightingOpen && session && canReportSighting(pet) && <SightingDialog pet={pet} session={session} onClose={() => setSightingOpen(false)} onReported={() => { setSightingOpen(false); setSent(true); }} />}
+  </main>;
 }
 
 function Footer() { return <footer className="site-footer"><div className="shell footer-inner"><div><strong>🐾 VoltaPet</strong><p>O caminho de volta para casa.</p></div><span>Feito com cuidado, para quem faz a diferença. 💛</span></div></footer>; }
