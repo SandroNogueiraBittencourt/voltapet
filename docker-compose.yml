@@ -102,3 +102,7 @@ networks:
 volumes:
   voltapet_postgres_data:
   voltapet_minio_data:
+
+
+#docker compose agora roda com este comando:
+#docker compose --env-file VoltaPet-BackEnd/.env up --build -d
