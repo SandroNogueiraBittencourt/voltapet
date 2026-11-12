@@ -1,8 +1,25 @@
+import { useEffect, useState } from "react";
+import { listSightings } from "../api/client";
+import { OwnerSightingMap } from "./SightingMap";
 import { localitySearchUrl, locationMapUrls } from "../utils/locationMap";
 import "./PetLocationMap.css";
 
 /** Mapa público apenas da região aproximada da ocorrência; não usa GPS do visitante. */
-export function PetLocationMap({ pet }) {
+export function PetLocationMap({ pet, token }) {
+  const [reports, setReports] = useState([]);
+  const [loadingReports, setLoadingReports] = useState(false);
+  const [reportsError, setReportsError] = useState("");
+  useEffect(() => {
+    if (!token || !pet.isOwner) { setReports([]); setReportsError(""); return; }
+    let active = true;
+    setLoadingReports(true);
+    setReportsError("");
+    listSightings(pet.id, token)
+      .then((data) => { if (active) setReports(data); })
+      .catch(() => { if (active) setReportsError("Não foi possível carregar os pinos dos avistamentos."); })
+      .finally(() => { if (active) setLoadingReports(false); });
+    return () => { active = false; };
+  }, [pet.id, pet.isOwner, token]);
   const urls = locationMapUrls(pet.latitude, pet.longitude);
   const fallback = localitySearchUrl(pet.city, pet.neighborhood);
 
@@ -12,7 +29,13 @@ export function PetLocationMap({ pet }) {
         <h2 id="pet-map-title">📍 Localidade da ocorrência</h2>
         <p>{[pet.neighborhood, pet.city].filter(Boolean).join(", ")}</p>
       </div>
-      {urls ? (
+      {token && pet.isOwner ? (
+        <>
+          {loadingReports && <p role="status">Carregando pontos dos avistamentos...</p>}
+          {reportsError && <p role="alert" className="form-error">{reportsError}</p>}
+          {!loadingReports && !reportsError && <OwnerSightingMap pet={pet} reports={reports} />}
+        </>
+      ) : urls ? (
         <>
           <div className="pet-map-frame">
             <iframe

@@ -1,0 +1,12 @@
+.sighting-coordinate-selector{display:grid;gap:8px;padding:14px;background:#f5fbf8;border:1px solid #c9e9dc;border-radius:16px}
+.sighting-coordinate-selector>strong{font-size:14px;color:#244c48}
+.sighting-coordinate-selector>p,.sighting-map-caption{font-size:12px;line-height:1.6;color:#607c77;margin:0}
+.sighting-map-picker,.sighting-map-owner{height:260px;width:100%;border-radius:12px;border:1px solid #d5e7df;overflow:hidden;z-index:0}
+.sighting-map-owner{height:380px}
+.sighting-point-feedback{font-size:12px;color:#466e63;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.sighting-point-feedback button{border:0;background:transparent;color:#aa3939;text-decoration:underline;font-weight:700}
+.sighting-map-owner-label{font-size:14px;font-weight:700;color:#086c63;margin:0 0 12px}
+.sighting-map-owner-panel{display:grid;gap:10px}
+.sighting-map-pin{background:#e9783b;color:white;border:3px solid white;box-shadow:0 2px 9px #0003;border-radius:55% 55% 55% 0;transform:rotate(-45deg);display:grid;place-items:center}
+.sighting-map-pin span{display:block;transform:rotate(45deg);font-weight:800;font-size:14px}
+@media(max-width:600px){.sighting-map-picker{height:230px}.sighting-map-owner{height:285px}}

@@ -5,6 +5,12 @@ import { createSighting } from "../api/client";
 import { consultarViaCep } from "../api/viaCep";
 vi.mock("../api/viaCep", () => ({ consultarViaCep: vi.fn(), formatarCep: (value) => { const digits = String(value).replace(/\D/g, "").slice(0, 8); return digits.length > 5 ? `${digits.slice(0, 5)}-${digits.slice(5)}` : digits; } }));
 
+vi.mock("./SightingMap", () => ({
+  SightingPointPicker: ({ onChange }) => (
+    <button type="button" onClick={() => onChange({ latitude: -27.597, longitude: -48.548 })}>Marcar ponto no mapa</button>
+  ),
+}));
+
 vi.mock("../api/client", () => ({
   apiError: () => "Erro no envio",
   createSighting: vi.fn(),
@@ -24,6 +30,7 @@ function fill() {
   fireEvent.change(screen.getByPlaceholderText("Nome da rua ou avenida"), { target: { value: "Rua Teste" } });
   fireEvent.change(screen.getByPlaceholderText("Ex.: Florianópolis"), { target: { value: "Florianópolis" } });
   fireEvent.change(screen.getByPlaceholderText("Ex.: Centro"), { target: { value: "Centro" } });
+  fireEvent.click(screen.getByRole("button", { name: "Marcar ponto no mapa" }));
 }
 
 describe("Avistamento de pet", () => {
@@ -43,6 +50,7 @@ describe("Avistamento de pet", () => {
     fireEvent.click(screen.getByRole("button", { name: "Enviar avistamento" }));
     await waitFor(() => expect(createSighting).toHaveBeenCalledWith("pet-1", expect.objectContaining({
       postalCode: "88000000", street: "Rua Teste", houseNumber: "42", city: "Florianópolis", neighborhood: "Centro",
+      latitude: -27.597, longitude: -48.548,
     }), [], "jwt"));
     expect(onReported).toHaveBeenCalled();
   });

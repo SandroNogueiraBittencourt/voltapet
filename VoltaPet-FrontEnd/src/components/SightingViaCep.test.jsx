@@ -3,6 +3,10 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { SightingDialog } from "./SightingDialog";
 import { consultarViaCep } from "../api/viaCep";
 
+vi.mock("./SightingMap", () => ({
+  SightingPointPicker: () => <div>Mapa fictício de teste</div>,
+}));
+
 vi.mock("../api/client", () => ({ apiError: () => "Falha no envio", createSighting: vi.fn() }));
 vi.mock("../api/viaCep", () => ({
   consultarViaCep: vi.fn(),

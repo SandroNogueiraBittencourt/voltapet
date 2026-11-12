@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiError, createSighting } from "../api/client";
 import "./Sighting.css";
 import { consultarViaCep, formatarCep } from "../api/viaCep";
+import { SightingPointPicker } from "./SightingMap";
 
 const MAX_PHOTO_BYTES = 5 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 20 * 1024 * 1024;
@@ -25,6 +26,9 @@ export function SightingDialog({ pet, session, onClose, onReported }) {
   const [description, setDescription] = useState("");
   const [photos, setPhotos] = useState([]);
   const [video, setVideo] = useState(null);
+  const [point, setPoint] = useState(null);
+  const [addressLookup, setAddressLookup] = useState("idle");
+  const [addressLookupMessage, setAddressLookupMessage] = useState("");
   const [error, setError] = useState("");
   const [pending, setPending] = useState(false);
 
@@ -91,11 +95,44 @@ export function SightingDialog({ pet, session, onClose, onReported }) {
     setError("");
   }
 
+  // Busca geográfica apenas a pedido do usuário (não faz autocomplete).
+  // Uma consulta manual envia o endereço ao Nominatim/OpenStreetMap.
+  async function locateAddress() {
+    if (!street.trim() || !city.trim()) {
+      setAddressLookupMessage("Preencha rua e cidade antes de buscar no mapa.");
+      return;
+    }
+    setAddressLookup("loading");
+    setAddressLookupMessage("Procurando endereço no mapa...");
+    try {
+      const query = [street.trim(), number.trim(), neighborhood.trim(), city.trim(),
+        postalCode.replace(/\D/g, ""), "Brasil"].filter(Boolean).join(", ");
+      const url = new URL("https://nominatim.openstreetmap.org/search");
+      url.searchParams.set("format", "jsonv2");
+      url.searchParams.set("countrycodes", "br");
+      url.searchParams.set("limit", "1");
+      url.searchParams.set("q", query);
+      const response = await fetch(url.toString(), { headers: { Accept: "application/json" } });
+      if (!response.ok) throw new Error("Serviço de mapas indisponível.");
+      const items = await response.json();
+      const first = items?.[0];
+      if (!first || !Number.isFinite(Number(first.lat)) || !Number.isFinite(Number(first.lon))) {
+        setAddressLookupMessage("Endereço não encontrado. Navegue no mapa e clique no local correto.");
+        return;
+      }
+      setPoint({ latitude: Number(Number(first.lat).toFixed(6)), longitude: Number(Number(first.lon).toFixed(6)) });
+      setAddressLookupMessage("Local sugerido. Confira o pino e clique no mapa para corrigir, se necessário.");
+    } catch (_error) {
+      setAddressLookupMessage("Não foi possível consultar o endereço. Selecione o ponto manualmente no mapa.");
+    } finally { setAddressLookup("idle"); }
+  }
+
   async function submit(event) {
     event.preventDefault();
     if (pending || cepStatus === "loading") return;
     const cleanedZip = postalCode.replace(/\D/g, "");
     if (cleanedZip.length !== 8) { setError("Informe um CEP válido com 8 dígitos."); return; }
+    if (!point) { setError("Marque no mapa o local onde viu o pet."); return; }
     const timestamp = new Date(seenAt);
     if (Number.isNaN(timestamp.getTime()) || timestamp.getTime() > Date.now() + 5 * 60 * 1000) {
       setError("Informe uma data e hora válidas, que não estejam no futuro.");
@@ -109,6 +146,8 @@ export function SightingDialog({ pet, session, onClose, onReported }) {
         street: street.trim(),
         city: city.trim(),
         neighborhood: neighborhood.trim(),
+        latitude: point.latitude,
+        longitude: point.longitude,
         houseNumber: number.trim(),
         addressDetails: details.trim() || null,
         seenAt: timestamp.toISOString(),
@@ -143,6 +182,15 @@ export function SightingDialog({ pet, session, onClose, onReported }) {
           <label>Endereço complementar / ponto de referência (opcional)<input maxLength={200} placeholder="Próximo à praça, comércio ou ponto de ônibus" value={details} onChange={(e) => setDetails(e.target.value)} /></label>
           <label>Data e horário em que foi visto *<input required type="datetime-local" max={nowLocal()} value={seenAt} onChange={(e) => setSeenAt(e.target.value)} /></label>
           <label>Descrição (opcional)<textarea rows="3" maxLength={1000} value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Direção em que o pet seguiu, condição do animal e outras pistas" /></label>
+          <div className="sighting-map-search">
+            <button type="button" className="btn btn-outline" disabled={pending || addressLookup === "loading"}
+              onClick={locateAddress}>
+              {addressLookup === "loading" ? "Localizando..." : "📍 Localizar endereço no mapa"}
+            </button>
+            <small>Esta busca opcional envia o endereço ao OpenStreetMap. Confira o resultado e corrija o pino no mapa.</small>
+            {addressLookupMessage && <p role="status">{addressLookupMessage}</p>}
+          </div>
+          <SightingPointPicker pet={pet} value={point} onChange={setPoint} />
           <div className="sighting-uploads">
             <label>Fotos (opcional, até 3, JPG/PNG, 5 MB cada)
               <input type="file" accept="image/jpeg,image/png" multiple onChange={choosePhotos} disabled={pending || photos.length >= 3} aria-label="Selecionar fotos do avistamento" />

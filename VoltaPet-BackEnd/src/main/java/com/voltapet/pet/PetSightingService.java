@@ -57,6 +57,9 @@ public class PetSightingService {
         if (request.seenAt().isAfter(Instant.now().plusSeconds(300))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Data do avistamento não pode ser futura");
         }
+        if ((request.latitude() == null) != (request.longitude() == null)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Selecione as duas coordenadas no mapa");
+        }
         List<Prepared> processed = new ArrayList<>();
         int countPhotos = 0;
         int countVideos = 0;
@@ -79,6 +82,7 @@ public class PetSightingService {
             request.street().trim(), request.houseNumber().trim(), trimOrNull(request.addressDetails()),
             request.seenAt(), trimOrNull(request.description()),
             request.city().trim(), request.neighborhood().trim());
+        sighting.setPosition(request.latitude(), request.longitude());
 
         // Storage S3 não participa da transação SQL: compensamos uploads mal-sucedidos.
         List<String> keys = new ArrayList<>();
@@ -120,7 +124,8 @@ public class PetSightingService {
                 s.getVideoMimeType(), mediaUrl(petId, s.getId(), 4)));
             return new PetSightingController.SightingDetails(s.getId(), s.getPostalCode(), s.getStreet(),
                 s.getHouseNumber(), s.getAddressDetails(), s.getSeenAt(), s.getDescription(),
-                s.getCreatedAt(), List.copyOf(media), s.getCity(), s.getNeighborhood());
+                s.getCreatedAt(), List.copyOf(media), s.getCity(), s.getNeighborhood(),
+                s.getLatitude(), s.getLongitude());
         }).toList();
     }
 

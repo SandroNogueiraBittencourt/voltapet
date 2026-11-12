@@ -175,7 +175,7 @@ function PetDetails({ session, openAuth }) {
         {error && <p className="form-error" role="alert">{error}</p>}
       </article>
     </div>
-    <div className="pet-details-map-panel"><PetLocationMap pet={pet} /></div>
+    <div className="pet-details-map-panel"><PetLocationMap pet={pet} token={pet.isOwner ? session?.token : null} /></div>
     {pet.isOwner && showReports && session && <SightingReports petId={pet.id} token={session.token} />}
     {sightingOpen && session && canReportSighting(pet) && <SightingDialog pet={pet} session={session} onClose={() => setSightingOpen(false)} onReported={() => { setSightingOpen(false); setSent(true); }} />}
   </main>;

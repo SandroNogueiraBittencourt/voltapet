@@ -6,6 +6,9 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
+import jakarta.validation.constraints.DecimalMin;
+import jakarta.validation.constraints.DecimalMax;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -38,15 +41,25 @@ public class PetSightingController {
         @NotNull Instant seenAt,
         @Size(max = 1000) String description,
         @NotBlank @Size(max = 100) String city,
-        @NotBlank @Size(max = 100) String neighborhood
-    ) { }
+        @NotBlank @Size(max = 100) String neighborhood,
+        @DecimalMin("-90.0") @DecimalMax("90.0") BigDecimal latitude,
+        @DecimalMin("-180.0") @DecimalMax("180.0") BigDecimal longitude
+    ) {
+        // Compatibilidade com testes e clientes Java anteriores.
+        public SightingRequest(String postalCode, String street, String houseNumber,
+                               String addressDetails, Instant seenAt, String description,
+                               String city, String neighborhood) {
+            this(postalCode, street, houseNumber, addressDetails, seenAt, description, city, neighborhood, null, null);
+        }
+    }
 
     public record Receipt(UUID id, String message) { }
     public record Attachment(int slot, String mimeType, String url) { }
     public record SightingDetails(UUID id, String postalCode, String street, String houseNumber,
                                   String addressDetails, Instant seenAt, String description,
                                   Instant createdAt, List<Attachment> attachments,
-                                  String city, String neighborhood) { }
+                                  String city, String neighborhood,
+                                  BigDecimal latitude, BigDecimal longitude) { }
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @ResponseStatus(HttpStatus.CREATED)

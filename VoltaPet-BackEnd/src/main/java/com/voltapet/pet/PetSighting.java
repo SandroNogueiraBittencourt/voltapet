@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.UUID;
 
@@ -37,6 +38,11 @@ public class PetSighting {
     private String city;
     @Column(name = "neighborhood", length = 100)
     private String neighborhood;
+    @Column(precision = 9, scale = 6)
+    private BigDecimal latitude;
+    @Column(precision = 9, scale = 6)
+    private BigDecimal longitude;
+
     @Column(name = "house_number", nullable = false, length = 20)
     private String houseNumber;
     @Column(name = "address_details", length = 200)
@@ -85,6 +91,12 @@ public class PetSighting {
     public String getHouseNumber() { return houseNumber; }
     public String getCity() { return city; }
     public String getNeighborhood() { return neighborhood; }
+    public BigDecimal getLatitude() { return latitude; }
+    public BigDecimal getLongitude() { return longitude; }
+    public void setPosition(BigDecimal latitude, BigDecimal longitude) {
+        this.latitude = latitude;
+        this.longitude = longitude;
+    }
     public String getAddressDetails() { return addressDetails; }
     public Instant getSeenAt() { return seenAt; }
     public String getDescription() { return description; }
